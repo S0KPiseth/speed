@@ -45,3 +45,6 @@
 .myForm > input {
     @apply border-1 border-black/20 p-2.5 rounded-md focus:outline-0;
 }
+.alert {
+    @apply text-red-500;
+}

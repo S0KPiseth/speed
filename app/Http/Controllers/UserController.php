@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class UserController
 {
@@ -19,7 +23,15 @@ class UserController
      */
     public function store(Request $request)
     {
-        //
+        $reqq = $request->validate([
+            "username"  => "string|max:255|unique:users|required",
+            "password" => "max:255|confirmed|required",
+            "email" => "email|required",
+        ], ['password.confirmed' => 'Password miss match', 'username.unique' => 'User is already taken']);
+        $user = User::create($reqq);
+        Auth::login($user);
+
+        return redirect()->intended('/home');
     }
 
     /**

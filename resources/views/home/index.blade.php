@@ -2,8 +2,10 @@
 
 @section('title', 'Speed')
 @section('content')
-
-<x-nav-bar :$linkName class="fixed" />
+@php
+$temp = null
+@endphp
+<x-nav-bar :$linkName class="fixed" :$user />
 @yield('layoutContent')
 <x-footer></x-footer>
 @endsection

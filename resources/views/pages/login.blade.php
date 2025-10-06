@@ -1,6 +1,4 @@
 @extends('home.index')
-
-
 @section('layoutContent')
 
 <div class="min-w-screen h-[80vh] flex items-center flex-col justify-center">
@@ -10,10 +8,20 @@
 
         <p>Don't have account? <a href="{{url($_ENV['APP_URL']."/signup")  }}" class="underline">Sign up here</a></p>
     </div>
-
     <br>
+
     <form action="" method="POST" class="flex flex-col w-1/3 gap-y-2.5 myForm">
+
+        @csrf
+
+        @error('username')
+        <p class="alert">{{ $message }}</p>
+        @enderror
         <input type="text" placeholder="Username" name="username">
+        @error('password')
+
+        <p class="alert">{{ $message }}</p>
+        @enderror
         <input type="password" placeholder="Password" name="password">
 
         <br>

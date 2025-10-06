@@ -18,8 +18,22 @@
             <li class="{{$linkName =='about'?'activeNavLink':''}}"><a href="{{ url( '/about') }}">About Us</a></li>
         </ul>
     </div>
-    <div class="actionLinks h-full flex w-1/8 gap-1.5">
-        <a href="" class="{{ $linkName =='login'?'bg-black text-white':'' }}">Login</a>
+    <div class="actionLinks h-full flex w-1/8 gap-1.5 items-center justify-end">
+        @if (!$user)
+
+        <a href="{{$_ENV['APP_URL']."/login"  }}" class="{{ $linkName =='login'?'bg-black text-white':'' }}">Login</a>
         <a href="{{$_ENV['APP_URL']."/signup"  }}" class="{{ $linkName =='signup'?'bg-black text-white':'' }}">Sign Up</a>
+        @else
+        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30" xmlns:xlink="http://www.w3.org/1999/xlink" enable-background="new 0 0 228 228" width="30" height="30">
+            <path d="M30 12.756h-11.751L0 2.057v25.886l12.19 -7.257c0.869 1.777 2.713 2.991 4.822 2.991h6.834c2.947 0 5.366 -2.37 5.366 -5.317v-0.185c0 -0.51 -0.095 -1.004 -0.229 -1.471H30zm-4.737 5.604c0 0.77 -0.648 1.37 -1.418 1.37h-6.834c-0.67 0 -1.23 -0.431 -1.366 -1.061l3.152 -1.834h5.047c0.77 0 1.418 0.569 1.418 1.34v0.185z" />
+        </svg>
+        <br>
+        <br>
+
+        <div class="h-full aspect-square rounded-full bg-amber-500 place-content-center">
+            <p class="text-center uppercase text-white text-xl">{{substr($user['username'], 0, 1)}}</p>
+
+        </div>
+        @endif
     </div>
 </nav>
