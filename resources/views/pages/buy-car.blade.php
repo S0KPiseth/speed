@@ -16,7 +16,7 @@
                     @endforeach
 
                 </select>
-            </label>S
+            </label>
             <label for="model">Model
                 <select name="model" id="model" class="visible w-full p-1.5">
                     <option value={{ null }}>model</option>

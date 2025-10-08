@@ -7,12 +7,12 @@
     <div class="w-screen h-screen flex">
 
         <div class="w-9/12 flex flex-col h-full px-2 gap-1.5">
-            <div id="largeImage" class="shadow-[0_0_2px] shadow-gray-400 rounded-3xl w-full grow bg-center bg-cover bg-no-repeat" style="background-image: url({{$car->images[0]->image_path  }});">
+            <div id="largeImage" class="largeSlider" style="background-image: url({{$car->images[0]->image_path  }});">
                 {{ "" }}
             </div>
             <div class="h-2/12 flex gap-x-1" id="smallImage">
                 @foreach ($car->images as $image)
-                <div class="shadow-[0_0_2px] shadow-gray-400 rounded-3xl w-1/5 aspect-video bg-center bg-cover bg-no-repeat" style="background-image: url({{$image->image_path }});"> {{ "" }}
+                <div class="smallSlider" style="background-image: url({{$image->image_path }});"> {{ "" }}
                 </div>
 
                 @endforeach

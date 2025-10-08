@@ -3,6 +3,7 @@
 use App\Http\Controllers\addController;
 use App\Http\Controllers\buyController;
 use App\Http\Controllers\loginController;
+use App\Http\Controllers\sellController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\UserController;
 
@@ -48,6 +49,10 @@ Route::prefix('add')->name('add.')->controller(addController::class)->group(
         Route::post('/wishlist', 'wishlist')->name('wishlist');
     }
 )->middleware('auth');
+Route::controller(sellController::class)->prefix('sell')->group(function () {
+    Route::get('/', 'index');
+    Route::get('/car_info', 'inputInfo');
+});
 
 
 
