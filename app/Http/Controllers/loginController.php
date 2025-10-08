@@ -19,7 +19,7 @@ class loginController
             ]
         );
         if (Auth::attempt($credential)) {
-            return redirect("/home")->with('user', Auth::user());
+            return redirect("/home");
         }
 
         return back()->withErrors([

@@ -48,3 +48,15 @@
 .alert {
     @apply text-red-500;
 }
+.filter input,
+.filter select {
+    @apply border-1 border-black/50;
+}
+
+.filter input,
+.filter select {
+    @apply rounded-md;
+}
+.activeImage {
+    @apply outline-2;
+}

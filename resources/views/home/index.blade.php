@@ -5,7 +5,7 @@
 @php
 $temp = null
 @endphp
-<x-nav-bar :$linkName class="fixed" :$user />
+<x-nav-bar class="fixed" />
 @yield('layoutContent')
 <x-footer></x-footer>
 @endsection

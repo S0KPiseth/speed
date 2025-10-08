@@ -15,13 +15,16 @@ return new class extends Migration
             $table->id();
             $table->foreignid('maker_id')->constrained('makers');
             $table->foreignid('model_id')->constrained('models');
+            $table->boolean('is_feature')->default(0);
+            $table->boolean('is_hot')->default(0);
+            $table->boolean('is_new_arrival')->default(0);
             $table->integer('year');
             $table->integer('price');
             $table->string('vin', 255);
             $table->integer('mileage');
             $table->foreignId('car_type_id')->constrained('car_types');
             $table->foreignId('fuel_type_id')->constrained('fuel_types');
-            $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('user_id')->nullable()->constrained('users');
             $table->foreignId('city_id')->constrained('cities');
             $table->string('address', 255);
             $table->string('phone', 45);

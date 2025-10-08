@@ -8,7 +8,7 @@
 @break
 
 @case('buy')
-Your order is completed.
+@include('pages.buy-car')
 @break
 
 @case('sell')
