@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('car_id')->constrained();
             $table->string('image_path', 255);
+            $table->string('image_id');
             $table->integer('position');
         });
     }

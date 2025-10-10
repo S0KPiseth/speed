@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class CarImage extends Model
 
 {
+    protected $fillable = ['image_path', 'position', 'car_id'];
+    public $timestamps = false;
     public function car(): BelongsTo
     {
         return $this->belongsTo(Car::class);

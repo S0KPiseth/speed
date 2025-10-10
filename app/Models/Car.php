@@ -10,6 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Car extends ElQ_MODEL
 {
+    protected $guarded = [
+        'is_feature',
+        'is_hot',
+        'is_new_arrival'
+    ];
     public function feature()
     {
         return $this->hasOne(CarFeature::class);

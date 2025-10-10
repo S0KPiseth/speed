@@ -23,7 +23,8 @@
             <br>
             <p class="text-white text-xl">View buying request</p>
         </div>
-        <div class="w-1/2 h-full bg-black rounded-3xl">
+
+        <a href="{{ route('sell.input') }}" class="w-1/2 h-full bg-black rounded-3xl">
             <div class="w-1/2 h-full bg-black rounded-3xl flex  items-center gap-2 justify-start p-2">
                 <div class="bg-white w-fit h-fit rounded-full p-2">
                     <svg width="50px" height="50px" viewBox="0 0 89.6 89.6" class="icon" xmlns="http://www.w3.org/2000/svg">
@@ -35,7 +36,7 @@
                 <br>
                 <p class="text-white text-xl">Add new car</p>
             </div>
-        </div>
+        </a>
     </div>
 </main>
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>

@@ -1,3 +1,5 @@
+@extends('home.index')
+@section("layoutContent")
 <div class="relative w-screen h-screen bg-center bg-cover flex justify-center items-center ">
     <div class="overflow-hidden w-1/3 aspect-square right-0 rounded-l-4xl top-2 absolute z-20 after:content-['Video_belong_to_Tesla'] after:absolute after:w-full after:left-0 after:bottom-0 after:pr-2.5 after:text-white after:text-right after:uppercase after:text-xs after:italic">
         <br>
@@ -19,3 +21,4 @@
     <x-wcus></x-wcus>
     @include('layout.partials.call2action')
 </div>
+@endsection
