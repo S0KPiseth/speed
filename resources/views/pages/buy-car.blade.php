@@ -3,7 +3,7 @@
 
 <main class="w-screen h-fit">
     <x-nav-bar user={{null}} linkName={{ $nav }} class="invisible"></x-nav-bar>
-    <div class="flex h-screen p-2 w-full gap-2">
+    <div class="flex h-screen p-2 w-full gap-2 relative">
 
 
         <form method="GET" class="filter bg-white rounded-3xl w-1/4 p-3.5 flex flex-col justify-evenly border-1 max-h-screen">
@@ -100,15 +100,18 @@
                 <input class="w-1/2 p-1.5 bg-black text-white" type="submit" value="Search">
             </div>
         </form>
-        <div class="w-3/4 bg-white rounded-3xl grid grid-cols-3 gap-1.5 auto-rows-min overflow-y-scroll p-2">
+        <div @class (['w-3/4', "rounded-3xl " , "grid"=>count($car_array)>0, "grid-cols-3 " , "gap-1.5 " , "auto-rows-min " , "overflow-y-scroll" , "p-2" , 'flex'=>count($car_array)==0, 'justify-center'=> count($car_array)==0,
+            'items-center'=>isset($car_array)])>
+            @if (!count($car_array)==0)
 
             @foreach ($car_array as $car)
-
-
             <x-car-display :car="$car"></x-car-display>
-
             @endforeach
+            @else
+            <p class="text-xl text-gray-500">There is no cars to show.</p>
+            @endif
         </div>
+
     </div>
 </main>
 @endsection

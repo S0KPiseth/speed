@@ -18,6 +18,20 @@ use Illuminate\Support\Facades\Log;
 class sellController
 {
     public $notationImages = ['images/carImageNotation/coverView.png', 'images/carImageNotation/interior.jpg', 'images/carImageNotation/sideView.png', 'images/carImageNotation/frontView.png', 'images/carImageNotation/backView.png'];
+    public $car_features = [
+        'abs' => 'ABS',
+        'air_conditioning' => 'Air Conditioning',
+        'power_windows' => 'Power Windows',
+        'power_door_locks' => 'Power Door Locks',
+        'cruise_control' => 'Cruise Control',
+        'bluetooth_connectivity' => 'Bluetooth Connectivity',
+        'remote_start' => 'Remote Start',
+        'gps_navigation' => 'GPS Navigation',
+        'heater_seats' => 'Heated Seats',
+        'climate_control' => 'Climate Control',
+        'rear_parking_sensors' => 'Rear Parking Sensors',
+        'leather_seats' => 'Leather Seats',
+    ];
     public $response_debug;
     public function index(Request $request)
     {
@@ -38,6 +52,7 @@ class sellController
             'car_types' => $car_types,
             'fuel_types' => $fuel_types,
             'cities' => $cities,
+            'car_features' => $this->car_features
         ]);
     }
     public function submitInfo(Request $request)

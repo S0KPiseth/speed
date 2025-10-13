@@ -6,7 +6,7 @@ $notation = ["Cover", "Interior", "Side view", "Front", "Back"];
 
 <main class="w-screen h-fit place-items-center">
     <x-nav-bar user={{null}} linkName={{ $nav }} class="invisible"></x-nav-bar>
-    <form class="w-full min-h-screen flex p-2" method="post" enctype="multipart/form-data">
+    <form class="w-full min-h-screen flex p-2 relative" method="post" enctype="multipart/form-data">
         @csrf
         <div class="w-4/12 h-screen myForm flex flex-col items-center gap-2 filter" method="post">
             <div class="w-11/12">
@@ -112,7 +112,7 @@ $notation = ["Cover", "Interior", "Side view", "Front", "Back"];
             <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
             @enderror
             <div class="flex w-11/12 gap-2">
-                <input type="submit" value="Clear" class="w-1/2 p-2.5 rounded-lg border-1"><input type="submit" value="Submit" class="w-1/2 bg-black text-white p-2.5 rounded-lg">
+                <input type="button" value="Clear" class="w-1/2 p-2.5 rounded-lg border-1"><input type="button" value="Submit" id="fake_submit" class="w-1/2 bg-black text-white p-2.5 rounded-lg cursor-pointer">
             </div>
 
 
@@ -158,6 +158,28 @@ $notation = ["Cover", "Interior", "Side view", "Front", "Back"];
             </div>
 
         </div>
+
+        <div class="bg-white/50 z-50  absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-screen h-screen flex items-center justify-center hidden" id="car_features">
+            <div class="bg-white shadow-2xl border-1 outline-1 rounded-2xl p-5 w-fit">
+
+                <p class="text-3xl">Car feature</p>
+                <p>Please select the available car features</p>
+                <br>
+                <div class="grid grid-cols-2 grid-rows-6 auto-rows-min text-xl gap-x-4 gap-y-1.5">
+                    @foreach ($car_features as $car_feature=>$feature_name )
+                    <label for={{ $car_feature }} class="flex items-center gap-1">
+                        <input type="checkbox" name={{ $car_feature }} id={{ $car_feature }} class="w-5 h-5">
+                        {{ $feature_name }}
+                    </label>
+
+
+                    @endforeach
+                    <br>
+                    <input type="submit" class="col-span-2 bg-black p-2 text-white rounded-xl" value="OK" id="real_submit">
+                </div>
+            </div>
+
+        </div>
     </form>
     <br>
 </main>
@@ -190,5 +212,17 @@ $notation = ["Cover", "Interior", "Side view", "Front", "Back"];
         reader.readAsDataURL(image);
     }
     imageUpload.forEach((e, indx) => e.addEventListener('change', (event) => handleUpload(event, indx)));
+    const fake_submit = document.getElementById('fake_submit');
+    const car_features = document.getElementById('car_features');
+    const real_submit = document.getElementById('real_submit');
+
+
+    fake_submit.addEventListener('click', () => {
+        car_features.classList.remove("hidden");
+    })
+    real_submit.addEventListener('click', () => {
+        car_features.classList.add('hidden');
+
+    })
 </script>
 @endsection
