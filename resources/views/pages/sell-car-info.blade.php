@@ -37,7 +37,7 @@ $notation = ["Cover", "Interior", "Side view", "Front", "Back"];
                 @error('year')
                 <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
                 @enderror
-                <input type="text" placeholder="Price" name="price">
+                <input type="text" placeholder="Price" name="price" class="w-1/2">
                 @error('price')
                 <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
                 @enderror
