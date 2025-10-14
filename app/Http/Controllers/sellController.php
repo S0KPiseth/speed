@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Car;
+use App\Models\CarFeature;
 use App\Models\CarType;
 use App\Models\City;
 use App\Models\FuelType;
@@ -138,14 +139,28 @@ class sellController
                 'description' => $request->input('description'),
                 'user_id' => Auth::id(),
             ]);
+            $car->feature()->create([
+    'abs' => $request->input('abs', 0),
+    'air_conditioning' => $request->input('air_conditioning', 0),
+    'power_windows' => $request->input('power_windows', 0),
+    'power_door_locks' => $request->input('power_door_locks', 0),
+    'bluetooth_connectivity' => $request->input('bluetooth_connectivity', 0),
+    'remote_start' => $request->input('remote_start', 0),
+    'gps_navigation' => $request->input('gps_navigation', 0),
+    'heater_seats' => $request->input('heater_seats', 0),
+    'climate_control' => $request->input('climate_control', 0),
+    'rear_parking_sensors' => $request->input('rear_parking_sensors', 0),
+    'leather_seats' => $request->input('leather_seats', 0),
+]);
 
             if ($car) {
-                dump("hi");
+
                 $client = new Client(['verify' => false]);
 
                 for ($i = 0; $i < 5; $i++) {
                     $file = $request->file('car_position_' . $i);
-                    if (!$file) continue;
+                    if (!$file)
+                        continue;
 
                     try {
                         $response = $client->request('POST', $_ENV['IMAGE_KIT_API_ENDPOINT'], [
@@ -174,7 +189,7 @@ class sellController
                             $body = json_decode($response->getBody(), true);
                             $car->images()->create([
                                 "image_path" => $body['url'],
-                                'position'   => $i + 1,
+                                'position' => $i + 1,
                                 'image_id' => $body['fileId']
                             ]);
                         } else {
