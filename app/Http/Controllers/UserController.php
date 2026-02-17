@@ -2,20 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Car;
 use App\Models\User;
+use App\Rules\Lowercase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 
 class UserController
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+
+    public function index($id)
     {
-        //
+        $user = User::with('cars')->find(1);
+
+        return view('pages.account', ['id' => $id, 'user' => $user]);
     }
 
     /**
@@ -24,13 +27,13 @@ class UserController
     public function store(Request $request)
     {
         $reqq = $request->validate([
-            "username"  => "string|max:255|unique:users|required",
+            "username"  => ["string", "max:255", "unique:users", "required", "alpha_dash", new Lowercase()],
             "password" => "max:255|confirmed|required",
             "email" => "email|required",
         ], ['password.confirmed' => 'Password miss match', 'username.unique' => 'User is already taken']);
+        $reqq['password'] = bcrypt($reqq['password']);
         $user = User::create($reqq);
         Auth::login($user);
-
         return redirect()->intended('/home');
     }
 

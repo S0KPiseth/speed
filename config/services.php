@@ -34,5 +34,12 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'carapi'=>[
+        'token'=>[
+            'token' =>env("CAR_API_TOKEN"),
+            'secret'=>env("CAR_API_SECRET")
+        ],
+        'url'=>env("CAR_API_URL")
+    ]
 
 ];

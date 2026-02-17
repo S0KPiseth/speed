@@ -9,7 +9,6 @@ use App\Models\City;
 use App\Models\FuelType;
 use App\Models\Maker;
 use App\Models\Model;
-use App\Models\State;
 use Illuminate\Http\Request;
 
 
@@ -63,12 +62,6 @@ class buyController
             });
         }
 
-        if ($request->filled('state')) {
-            $car->whereHas('state', function ($query) use ($request) {
-                $query->where('name', $request->input('state'));
-            });
-        }
-
         if ($request->filled('city')) {
             $car->whereHas('city', function ($query) use ($request) {
                 $query->where('name', $request->input('city'));
@@ -80,17 +73,13 @@ class buyController
                 $query->where('name', $request->input('fuel_type'));
             });
         }
-
-
-
         $result = $car->orderBy('price')->get();
         $makers = Maker::all();
         $model = Model::all();
         $type = CarType::all();
-        $state = State::all();
         $city = City::all();
         $fuel_type = FuelType::all();
-        return view('pages.buy-car', ['car_array' => $result, 'makers' => $makers, 'models' => $model, 'types' => $type, 'states' => $state, 'cities' => $city, 'fuel_types' => $fuel_type]);
+        return view('pages.buy-car', ['car_array' => $result, 'makers' => $makers, 'models' => $model, 'types' => $type, 'cities' => $city, 'fuel_types' => $fuel_type]);
     }
     public function showDetails(Request $request, $id)
 

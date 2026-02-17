@@ -14,7 +14,13 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+
+use function PHPUnit\Framework\throwException;
 
 class sellController
 {
@@ -33,13 +39,23 @@ class sellController
         'rear_parking_sensors' => 'Rear Parking Sensors',
         'leather_seats' => 'Leather Seats',
     ];
-    public $response_debug;
+    public $upload_status = false;
     public function index(Request $request)
     {
         return view('pages.sell-car');
     }
+
+    
     public function inputInfo(Request $request)
     {
+        // dd(config('services.carapi.url')."/api/auth/login");
+        $token = Cache::remember("third_party_car_api_key", now()->addMinute(55), function(){
+            $response = Http::post(config('services.carapi.url')."/api/auth/login", [
+                 "api_token"=> config('services.carapi.token.token'),
+                "api_secret"=> config('services.carapi.token.secret')
+            ]);
+            return $response->body();
+        });
         $models = Model::orderBy('name')->get();
         $makers = Maker::orderBy('name')->get();
         $car_types = CarType::orderBy('name')->get();
@@ -53,14 +69,21 @@ class sellController
             'car_types' => $car_types,
             'fuel_types' => $fuel_types,
             'cities' => $cities,
-            'car_features' => $this->car_features
+            'car_features' => $this->car_features,
+            'upload_status' => $this->upload_status,
+            'api_jwt' =>$token
         ]);
     }
     public function submitInfo(Request $request)
     {
+        $data = Storage::json("all_orphaned_styles.json");
+
+        $request->merge([
+            "maker"=>strtoupper($request->maker)
+        ]);
         $request->validate([
-            'maker' => 'required|exists:makers,id',
-            'model' => 'required|exists:models,id',
+            'maker' => ['required', Rule::in(array_keys($data))],
+            'model' => 'required',
             'year' => 'required|integer|max:' . now()->year,
             'price' => 'required|numeric',
             'vin' => 'required|string|max:255',
@@ -79,9 +102,8 @@ class sellController
             'car_position_5' => 'required|image|max:10240',
         ], [
             'maker.required' => 'Please select a car manufacturer.',
-            'maker.exists' => 'The selected manufacturer is invalid.',
+            'maker.in'=>"Please select the valid maker",
             'model.required' => 'Please select a car model.',
-            'model.exists' => 'The selected model is invalid.',
             'year.required' => 'Please enter the car’s manufacturing year.',
             'year.integer' => 'The year must be a valid number.',
             'year.max' => 'The year cannot be in the future.',
@@ -123,9 +145,20 @@ class sellController
             'car_position_5.max' => 'The fifth car image cannot exceed 10MB.',
         ]);
         try {
+            $makerId = Maker::where("name", $request->input('maker'))->value('id');
+            if(!$makerId){
+                $newMaker = Maker::create(['name'=>$request->input('maker')]);
+                $makerId = $newMaker->id;
+            };
+            $modelId = Model::where("name", $request->input('model'))->value('id');
+            if(!$modelId){
+                $newModel = Model::create(['name'=>$request->input('model'), 'maker_id'=>$makerId]);
+                $modelId = $newModel->id;
+            };
             $car = Car::create([
-                'maker_id' => $request->input('maker'),
-                'model_id' => $request->input('model'),
+
+                'maker_id' => $makerId,
+                'model_id' => $modelId,
                 'year' => $request->input('year'),
                 'price' => $request->input('price'),
                 'vin' => $request->input('vin'),
@@ -140,30 +173,30 @@ class sellController
                 'user_id' => Auth::id(),
             ]);
             $car->feature()->create([
-    'abs' => $request->input('abs', 0),
-    'air_conditioning' => $request->input('air_conditioning', 0),
-    'power_windows' => $request->input('power_windows', 0),
-    'power_door_locks' => $request->input('power_door_locks', 0),
-    'bluetooth_connectivity' => $request->input('bluetooth_connectivity', 0),
-    'remote_start' => $request->input('remote_start', 0),
-    'gps_navigation' => $request->input('gps_navigation', 0),
-    'heater_seats' => $request->input('heater_seats', 0),
-    'climate_control' => $request->input('climate_control', 0),
-    'rear_parking_sensors' => $request->input('rear_parking_sensors', 0),
-    'leather_seats' => $request->input('leather_seats', 0),
-]);
+                'abs' => $request->input('abs', 0),
+                'air_conditioning' => $request->input('air_conditioning', 0),
+                'power_windows' => $request->input('power_windows', 0),
+                'power_door_locks' => $request->input('power_door_locks', 0),
+                'bluetooth_connectivity' => $request->input('bluetooth_connectivity', 0),
+                'remote_start' => $request->input('remote_start', 0),
+                'gps_navigation' => $request->input('gps_navigation', 0),
+                'heater_seats' => $request->input('heater_seats', 0),
+                'climate_control' => $request->input('climate_control', 0),
+                'rear_parking_sensors' => $request->input('rear_parking_sensors', 0),
+                'leather_seats' => $request->input('leather_seats', 0),
+            ]);
 
             if ($car) {
 
                 $client = new Client(['verify' => false]);
 
                 for ($i = 0; $i < 5; $i++) {
-                    $file = $request->file('car_position_' . $i);
+                    $file = $request->file('car_position_' . ($i + 1));
                     if (!$file)
                         continue;
 
                     try {
-                        $response = $client->request('POST', $_ENV['IMAGE_KIT_API_ENDPOINT'], [
+                        $response = $client->request('POST', $_ENV['IMAGE_KIT_API_ENDPOINT'] . 'upload', [
                             'multipart' => [
                                 [
                                     'name' => 'file',
@@ -183,7 +216,6 @@ class sellController
                                 'Authorization' => 'Basic ' . $_ENV['IMAGE_KIT_API_KEY'],
                             ],
                         ]);
-                        $this->response_debug = $response;
 
                         if ($response->getStatusCode() === 200) {
                             $body = json_decode($response->getBody(), true);
@@ -193,27 +225,36 @@ class sellController
                                 'image_id' => $body['fileId']
                             ]);
                         } else {
-                            dump($response);
-                            Log::warning("Image upload failed for position $i", [
-                                'status' => $response->getStatusCode(),
-                                'body' => $response->getBody()->getContents(),
-                            ]);
+                            throw new Exception('Image upload failed for position ' . $i);
                         }
                     } catch (RequestException $e) {
 
-                        Log::error("ImageKit upload failed for car position $i", [
-                            'error' => $e->getMessage(),
-                            'response' => $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null,
-                        ]);
-                        $this->response_debug = $e;
+                        throw new Exception($e->getMessage());
                     }
                 }
+            } else {
+                throw new Exception('Error creating Car object.');
             }
-            dump($this->response_debug);
-            return 'added';
+
+            return back()->with('success', 'Your car has been uploaded.');
         } catch (Exception $e) {
-            dump($e);
-            return 'not added';
+            if ($car) {
+                $car->feature()->delete();
+                $car_images_uploaded = $car->images;
+                $client = new Client(['verify' => false]);
+                foreach ($car_images_uploaded as $carImage) {
+                    $response = $client->request('DELETE', $_ENV['IMAGE_KIT_API_ENDPOINT'] . $carImage->image_id, [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => 'Basic ' . $_ENV['IMAGE_KIT_API_KEY'],
+                        ],
+                    ]);
+                };
+                $car->images()->delete();
+                $car->delete();
+            }
+
+            return back()->withErrors($e->getMessage());
         }
     }
     //

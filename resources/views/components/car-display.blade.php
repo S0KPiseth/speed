@@ -31,18 +31,30 @@
         </p>
         <p class="text-xs font-medium">{{"$ ". $car->price }}</p>
         <div class="w-full flex justify-center gap-2.5 text-base">
-
+            @if ($user->cars($car))
             <form action="{{ route('add.wishlist') }}" method="post">
                 @csrf
                 <input type="hidden" name="car_id" value={{ $car->id }}>
-                <input type="submit" class="uppercase text-base text-black bg-gray-100 p-2.5 rounded-full" value="wishlist">
+                <input type="submit" class="uppercase text-base text-black bg-gray-100 p-1.5 px-3 rounded-full" value="edit">
+            </form>
+            <form action="{{ route('add.cart') }}" method="post">
+                @csrf
+                <input type="hidden" name="car_id" value={{ $car->id }}>
+                <input type="submit" class="uppercase text-base  bg-black text-white p-1.5 px-3 rounded-full" value="make as sold">
+            </form>
+            @else   
+            <form action="{{ route('add.wishlist') }}" method="post">
+                @csrf
+                <input type="hidden" name="car_id" value={{ $car->id }}>
+                <input type="submit" class="uppercase text-base text-black bg-gray-100 p-1.5 px-3 rounded-full" value="wishlist">
             </form>
 
             <form action="{{ route('add.cart') }}" method="post">
                 @csrf
                 <input type="hidden" name="car_id" value={{ $car->id }}>
-                <input type="submit" class="uppercase text-base  bg-black text-white p-2.5 rounded-full" value="Add cart">
+                <input type="submit" class="uppercase text-base  bg-black text-white p-1.5 px-3 rounded-full" value="Buy now">
             </form>
+            @endif
         </div>
     </div>
 </div>

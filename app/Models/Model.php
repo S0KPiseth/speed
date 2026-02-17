@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Model extends EloquentModel
 {
+    protected $fillable = ["name", 'maker_id'];
+    public $timestamps = false;
     public function maker(): BelongsTo
     {
         return $this->belongsTo(Maker::class);

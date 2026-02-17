@@ -1,6 +1,5 @@
 @extends('home.index')
 @section("layoutContent")
-
 <main class="w-screen h-fit">
     <x-nav-bar user={{null}} linkName={{ $nav }} class="invisible"></x-nav-bar>
     <div class="flex h-screen p-2 w-full gap-2 relative">
@@ -22,7 +21,7 @@
                     <option value={{ null }}>model</option>
 
                     @foreach ($models as $model)
-                    <option value={{ $model->name }}>{{ $model->name }}</option>
+                    <option value={{ http_build_query(['model' => $model->name]) }}>{{ $model->name }}</option>
                     @endforeach
                 </select>
             </label>
@@ -65,17 +64,6 @@
                     @endforeach
                 </select>
             </label>
-
-            <label for="state">State
-                <select name="state" id="state" class="visible w-full p-1.5">
-                    <option value={{ null }}>State/Region</option>
-
-                    @foreach ($states as $state)
-                    <option value={{ $state->name }}>{{ $state->name }}</option>
-                    @endforeach
-                </select>
-            </label>
-
             <label for="city">City
                 <select name="city" id="city" class="visible w-full p-1.5">
                     <option value={{ null }}>City</option>
