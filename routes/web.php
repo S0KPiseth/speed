@@ -1,6 +1,7 @@
 <?php
 use App\Http\Controllers\addController;
 use App\Http\Controllers\buyController;
+use App\Http\Controllers\editController;
 use App\Http\Controllers\getCarDetails;
 use App\Http\Controllers\getMakes;
 use App\Http\Controllers\loginController;
@@ -53,4 +54,6 @@ Route::get('/home', function () {
 
 Route::get('/account/{id}', [UserController::class, 'index']);
 Route::post('/api/carDetails/v2', [getCarDetails::class, 'getMaker']);
-ROute::get('/api/carDetails/v2/{maker}', [getCarDetails::class, 'getModel']);
+Route::get('/api/carDetails/v2/{maker}', [getCarDetails::class, 'getModel']);
+Route::get('/edit/{id}', [editController::class, 'index'])->name('edit')->middleware('auth');
+Route::post('/edit/{id}', [editController::class, 'save'])->name('edit.save')->middleware('auth');

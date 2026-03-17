@@ -45,11 +45,6 @@ class Car extends ElQ_MODEL
     {
         return $this->belongsTo(Maker::class);
     }
-    public function state(): BelongsTo
-    {
-        return $this->belongsTo(State::class);
-    }
-
     public function city(): BelongsTo
     {
         return $this->belongsTo(City::class);

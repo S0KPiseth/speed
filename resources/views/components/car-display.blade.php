@@ -31,8 +31,8 @@
         </p>
         <p class="text-xs font-medium">{{"$ ". $car->price }}</p>
         <div class="w-full flex justify-center gap-2.5 text-base">
-            @if ($user->cars($car))
-            <form action="{{ route('add.wishlist') }}" method="post">
+            @if ($user?->cars->find($car->id))
+            <form action="{{ route('edit', ['id'=>$car->id]) }}" method="get">
                 @csrf
                 <input type="hidden" name="car_id" value={{ $car->id }}>
                 <input type="submit" class="uppercase text-base text-black bg-gray-100 p-1.5 px-3 rounded-full" value="edit">

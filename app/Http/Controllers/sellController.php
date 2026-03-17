@@ -3,24 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Car;
-use App\Models\CarFeature;
 use App\Models\CarType;
 use App\Models\City;
 use App\Models\FuelType;
 use App\Models\Maker;
 use App\Models\Model;
 use Exception;
-use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
-
-use function PHPUnit\Framework\throwException;
+use ImageKit;
 
 class sellController
 {
@@ -40,22 +34,16 @@ class sellController
         'leather_seats' => 'Leather Seats',
     ];
     public $upload_status = false;
+    public $imageKit;
     public function index(Request $request)
     {
         return view('pages.sell-car');
     }
 
-    
+
     public function inputInfo(Request $request)
     {
         // dd(config('services.carapi.url')."/api/auth/login");
-        $token = Cache::remember("third_party_car_api_key", now()->addMinute(55), function(){
-            $response = Http::post(config('services.carapi.url')."/api/auth/login", [
-                 "api_token"=> config('services.carapi.token.token'),
-                "api_secret"=> config('services.carapi.token.secret')
-            ]);
-            return $response->body();
-        });
         $models = Model::orderBy('name')->get();
         $makers = Maker::orderBy('name')->get();
         $car_types = CarType::orderBy('name')->get();
@@ -71,7 +59,7 @@ class sellController
             'cities' => $cities,
             'car_features' => $this->car_features,
             'upload_status' => $this->upload_status,
-            'api_jwt' =>$token
+            'old_car' => null,
         ]);
     }
     public function submitInfo(Request $request)
@@ -79,7 +67,7 @@ class sellController
         $data = Storage::json("all_orphaned_styles.json");
 
         $request->merge([
-            "maker"=>strtoupper($request->maker)
+            "maker" => strtoupper($request->maker)
         ]);
         $request->validate([
             'maker' => ['required', Rule::in(array_keys($data))],
@@ -102,7 +90,7 @@ class sellController
             'car_position_5' => 'required|image|max:10240',
         ], [
             'maker.required' => 'Please select a car manufacturer.',
-            'maker.in'=>"Please select the valid maker",
+            'maker.in' => "Please select the valid maker",
             'model.required' => 'Please select a car model.',
             'year.required' => 'Please enter the car’s manufacturing year.',
             'year.integer' => 'The year must be a valid number.',
@@ -146,13 +134,13 @@ class sellController
         ]);
         try {
             $makerId = Maker::where("name", $request->input('maker'))->value('id');
-            if(!$makerId){
-                $newMaker = Maker::create(['name'=>$request->input('maker')]);
+            if (!$makerId) {
+                $newMaker = Maker::create(['name' => $request->input('maker')]);
                 $makerId = $newMaker->id;
             };
             $modelId = Model::where("name", $request->input('model'))->value('id');
-            if(!$modelId){
-                $newModel = Model::create(['name'=>$request->input('model'), 'maker_id'=>$makerId]);
+            if (!$modelId) {
+                $newModel = Model::create(['name' => $request->input('model'), 'maker_id' => $makerId]);
                 $modelId = $newModel->id;
             };
             $car = Car::create([
@@ -187,50 +175,53 @@ class sellController
             ]);
 
             if ($car) {
-
-                $client = new Client(['verify' => false]);
-
                 for ($i = 0; $i < 5; $i++) {
                     $file = $request->file('car_position_' . ($i + 1));
                     if (!$file)
                         continue;
-
+                    $this->imageKit = new ImageKit();
                     try {
-                        $response = $client->request('POST', $_ENV['IMAGE_KIT_API_ENDPOINT'] . 'upload', [
-                            'multipart' => [
-                                [
-                                    'name' => 'file',
-                                    'filename' => $file->getClientOriginalName(),
-                                    'contents' => $file->get(),
-                                    'headers' => [
-                                        'Content-Type' => $file->getClientMimeType()
-                                    ]
-                                ],
-                                [
-                                    'name' => 'fileName',
-                                    'contents' => time() . $file->getClientOriginalName(),
-                                ]
-                            ],
-                            'headers' => [
-                                'Accept' => 'application/json',
-                                'Authorization' => 'Basic ' . $_ENV['IMAGE_KIT_API_KEY'],
-                            ],
-                        ]);
-
-                        if ($response->getStatusCode() === 200) {
-                            $body = json_decode($response->getBody(), true);
-                            $car->images()->create([
-                                "image_path" => $body['url'],
-                                'position' => $i + 1,
-                                'image_id' => $body['fileId']
-                            ]);
-                        } else {
-                            throw new Exception('Image upload failed for position ' . $i);
-                        }
+                        $this->imageKit->saveImage($file, $car, $i);
                     } catch (RequestException $e) {
-
                         throw new Exception($e->getMessage());
                     }
+
+                    // try {
+                    //     $response = $client->request('POST', $_ENV['IMAGE_KIT_API_ENDPOINT'] . 'upload', [
+                    //         'multipart' => [
+                    //             [
+                    //                 'name' => 'file',
+                    //                 'filename' => $file->getClientOriginalName(),
+                    //                 'contents' => $file->get(),
+                    //                 'headers' => [
+                    //                     'Content-Type' => $file->getClientMimeType()
+                    //                 ]
+                    //             ],
+                    //             [
+                    //                 'name' => 'fileName',
+                    //                 'contents' => time() . $file->getClientOriginalName(),
+                    //             ]
+                    //         ],
+                    //         'headers' => [
+                    //             'Accept' => 'application/json',
+                    //             'Authorization' => 'Basic ' . $_ENV['IMAGE_KIT_API_KEY'],
+                    //         ],
+                    //     ]);
+
+                    //     if ($response->getStatusCode() === 200) {
+                    //         $body = json_decode($response->getBody(), true);
+                    //         $car->images()->create([
+                    //             "image_path" => $body['url'],
+                    //             'position' => $i + 1,
+                    //             'image_id' => $body['fileId']
+                    //         ]);
+                    //     } else {
+                    //         throw new Exception('Image upload failed for position ' . $i);
+                    //     }
+                    // } catch (RequestException $e) {
+
+                    //     throw new Exception($e->getMessage());
+                    // }
                 }
             } else {
                 throw new Exception('Error creating Car object.');
@@ -241,14 +232,15 @@ class sellController
             if ($car) {
                 $car->feature()->delete();
                 $car_images_uploaded = $car->images;
-                $client = new Client(['verify' => false]);
                 foreach ($car_images_uploaded as $carImage) {
-                    $response = $client->request('DELETE', $_ENV['IMAGE_KIT_API_ENDPOINT'] . $carImage->image_id, [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => 'Basic ' . $_ENV['IMAGE_KIT_API_KEY'],
-                        ],
-                    ]);
+                    $this->imageKit->deleteImage($carImage->image_id);
+
+                    // $response = $client->request('DELETE', $_ENV['IMAGE_KIT_API_ENDPOINT'] . $carImage->image_id, [
+                    //     'headers' => [
+                    //         'Accept' => 'application/json',
+                    //         'Authorization' => 'Basic ' . $_ENV['IMAGE_KIT_API_KEY'],
+                    //     ],
+                    // ]);
                 };
                 $car->images()->delete();
                 $car->delete();

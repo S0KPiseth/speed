@@ -9,9 +9,9 @@ use App\Models\City;
 use App\Models\FuelType;
 use App\Models\Maker;
 use App\Models\Model;
+use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
-
-
+use Illuminate\Support\Facades\Auth as FacadesAuth;
 
 class buyController
 {
@@ -85,6 +85,7 @@ class buyController
 
     {
         $car = Car::find($id);
-        return view('pages.car-details', ['car' => $car]);
+        $user = FacadesAuth::user();
+        return view('pages.car-details', ['car' => $car, 'user' => $user]);
     }
 }

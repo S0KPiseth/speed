@@ -3,8 +3,6 @@
 <main class="w-screen h-fit">
     <x-nav-bar user={{null}} linkName={{ $nav }} class="invisible"></x-nav-bar>
     <div class="flex h-screen p-2 w-full gap-2 relative">
-
-
         <form method="GET" class="filter bg-white rounded-3xl w-1/4 p-3.5 flex flex-col justify-evenly border-1 max-h-screen">
             @csrf
             <label for="maker">Maker

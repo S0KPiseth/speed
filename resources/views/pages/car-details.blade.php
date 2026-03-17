@@ -3,6 +3,7 @@
 
 <main class="w-screen h-fit">
     <x-nav-bar class="invisible"></x-nav-bar>
+    
     <br>
     <div class="w-screen h-screen flex">
 
@@ -11,7 +12,7 @@
                 {{ "" }}
             </div>
             <div class="h-2/12 flex gap-x-1" id="smallImage">
-                @foreach ($car->images as $image)
+                @foreach ($car->images->sortBy('position') as $image)
                 <div class="smallSlider" style="background-image: url({{$image->image_path }});"> {{ "" }}
                 </div>
 
@@ -47,9 +48,27 @@
                 <a href="" class="text-xs underline">Seller details</a>
             </div>
             <br>
+           @if ($user->cars->find($car->id))
             <div class="w-full flex flex-col gap-y-2">
-                <a href="" class="w-full border-1 p-2 rounded-full px-4 flex items-center justify-between">Add to cart <svg width="25px" height="25px" viewBox="0 0 0.5 0.5" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M0 0.031v0.063h0.068l0.026 0.156L0.063 0.4 0.063 0.406v0.032a0.063 0.063 0 1 0 0.125 0h0.125A0.063 0.063 0 1 0 0.375 0.375H0.132L0.144 0.313h0.325V0.031z" fill="#030708" />
+                <a href="" class="w-full border-1 p-2 rounded-full px-4 flex items-center justify-between">Edit
+                    <svg width="24px" height="24px">
+                        <use href="{{ asset('svgs/icons.svg#icon-edit') }}"></use>
+                    </svg>
+                </a>
+                <a href="" class="w-full bg-black text-white p-2 rounded-full px-4 flex items-center justify-between">Delete
+                    <svg width="25px" height="25px">
+                        <use href="{{ asset('svgs/icons.svg#icon-delete') }}"></use>
+                    </svg>
+                </a>
+                    </svg>
+                </a>
+            </div>
+           @else
+
+            <div class="w-full flex flex-col gap-y-2">
+                <a href="" class="w-full border-1 p-2 rounded-full px-4 flex items-center justify-between">Make offer
+                    <svg width="25px" height="25px">
+                        <use href="{{ asset('svgs/icons.svg#icon-offer') }}"></use>
                     </svg></a>
                 <a href="" class="w-full bg-black text-white p-2 rounded-full px-4 flex items-center justify-between">Buy now <svg version="1.1" id="Uploaded to svgrepo.com" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25px" height="25px" viewBox="0 0 1 1" xml:space="preserve">
                         <style type="text/css">
@@ -60,6 +79,7 @@
                         <path class="stone_een" d="M0.871 0.871A0.094 0.094 0 0 1 0.777 0.969H0.223a0.094 0.094 0 0 1 -0.094 -0.098l0.025 -0.56A0.031 0.031 0 0 1 0.186 0.281h0.628a0.031 0.031 0 0 1 0.031 0.03zM0.506 0.031A0.188 0.188 0 0 0 0.313 0.219v0.031h0.063V0.219a0.125 0.125 0 0 1 0.25 0v0.031h0.063v-0.023c0 -0.103 -0.079 -0.192 -0.182 -0.195" />
                     </svg></a>
             </div>
+           @endif 
             <br>
             <div class="flex flex-col h-4/12 flex-wrap items-start">
                 @foreach([
