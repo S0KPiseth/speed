@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cities', function (Blueprint $table) {
+        Schema::create('account_verification', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 45);
+            $table->foreignId('user_id')->constrained('users');
+            $table->boolean('email_verified')->default(false);
+            $table->boolean('phone_verified')->default(false);
+            $table->timestamps();
         });
     }
 
@@ -22,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cities');
+        Schema::dropIfExists('account_verification');
     }
 };

@@ -33,6 +33,7 @@ class UserController
         ], ['password.confirmed' => 'Password miss match', 'username.unique' => 'User is already taken']);
         $reqq['password'] = bcrypt($reqq['password']);
         $user = User::create($reqq);
+        $user->accountVerification()->create();
         Auth::login($user);
         return redirect()->intended('/home');
     }

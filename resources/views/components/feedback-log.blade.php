@@ -1,5 +1,9 @@
-@props(['error'=>null, 'success'=>null])
-<div class="error bg-white shadow-[0_0_3px] shadow-black/20 p-2 rounded-xl items-center justify-between flex min-w-80 relative before:content-[''] {{ $error?'before:bg-red-500':'bg-green-500' }} before:w-full before:h-1 before:absolute before:left-0 before:bottom-0 overflow-hidden">
+@props(['error' => null, 'success' => null, 'timeout' => 10000])
+@php
+    $feedbackId = 'feedback-log-' . uniqid();
+@endphp
+
+<div id="{{ $feedbackId }}" data-feedback-log data-timeout="{{ (int) $timeout }}" class="error bg-white shadow-[0_0_3px] shadow-black/20 p-2 rounded-xl items-center justify-between flex min-w-80 relative before:content-[''] {{ $error ? 'before:bg-red-500' : 'bg-green-500' }} before:w-full before:h-1 before:absolute before:left-0 before:bottom-0 overflow-hidden">
     <div class="flex gap-x-2 items-center">
 
         <div>
@@ -17,11 +21,40 @@
             @endif
         </div>
         <div class="font-bold">
-            <p>{{$error? $error:$success }}</p>
+            <p>{{ $error ? $error : $success }}</p>
         </div>
     </div>
-    <svg class="justify-self-end" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18" />
-        <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
+    <button type="button" data-feedback-close aria-label="Dismiss notification" class="justify-self-end rounded-md p-1 transition hover:bg-black/5">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+    </button>
 </div>
+
+<script>
+    (() => {
+        const feedback = document.getElementById('{{ $feedbackId }}');
+
+        if (!feedback) {
+            return;
+        }
+
+        const destroy = () => {
+            if (feedback.parentNode) {
+                feedback.remove();
+            }
+        };
+
+        const timeoutMs = Number(feedback.dataset.timeout || 10000);
+        const timer = window.setTimeout(destroy, timeoutMs);
+        const closeButton = feedback.querySelector('[data-feedback-close]');
+
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                window.clearTimeout(timer);
+                destroy();
+            });
+        }
+    })();
+</script>

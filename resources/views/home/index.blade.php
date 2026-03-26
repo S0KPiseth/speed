@@ -1,6 +1,7 @@
+{{-- TODO:Complete verification page --}}
 @extends('layout.app')
 
-@section('title', 'Speed')
+@section('title', 'Prime Motor')
 @section('content')
 @php
 $temp = null

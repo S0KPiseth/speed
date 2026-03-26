@@ -11,7 +11,7 @@
         "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
         "Noto Color Emoji";
     --font-geist: "Geist", sans-serif;
-    --animate-shrink: shrink 12s;
+    --animate-shrink: shrink 10s;
 }
 @font-face {
     font-family: "humane";

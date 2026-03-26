@@ -66,11 +66,11 @@
            @else
 
             <div class="w-full flex flex-col gap-y-2">
-                <a href="" class="w-full border-1 p-2 rounded-full px-4 flex items-center justify-between">Make offer
+                <a href="{{ route('details.offer', ['id' => $car->id]) }}" class="w-full border-1 p-2 rounded-full px-4 flex items-center justify-between">Make offer
                     <svg width="25px" height="25px">
                         <use href="{{ asset('svgs/icons.svg#icon-offer') }}"></use>
                     </svg></a>
-                <a href="" class="w-full bg-black text-white p-2 rounded-full px-4 flex items-center justify-between">Buy now <svg version="1.1" id="Uploaded to svgrepo.com" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25px" height="25px" viewBox="0 0 1 1" xml:space="preserve">
+                <a href="{{ route('details.checkout', ['id' => $car->id]) }}" class="w-full bg-black text-white p-2 rounded-full px-4 flex items-center justify-between">Buy now <svg version="1.1" id="Uploaded to svgrepo.com" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25px" height="25px" viewBox="0 0 1 1" xml:space="preserve">
                         <style type="text/css">
                             .stone_een {
                                 fill: #ffff;

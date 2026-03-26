@@ -40,6 +40,15 @@ return [
             'secret'=>env("CAR_API_SECRET")
         ],
         'url'=>env("CAR_API_URL")
-    ]
+    ],
+
+    'brevo' => [
+        'key' => env('BREVO_API_KEY'),
+        'url' => env('BREVO_API_URL', 'https://api.brevo.com/v3'),
+        'sender' => [
+            'name' => env('BREVO_SENDER_NAME', env('APP_NAME', 'Prime Motor')),
+            'email' => env('BREVO_SENDER_EMAIL'),
+        ],
+    ],
 
 ];
