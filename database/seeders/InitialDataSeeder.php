@@ -51,6 +51,7 @@ class InitialDataSeeder extends Seeder
                 'lastName' => 'Sok',
                 'username' => 'ace',
                 'password' => bcrypt('1234'),
+                'role' => 'admin',
                 'phone' => '+85512345678',
                 'created_at' => now(),
                 'updated_at' => now(),

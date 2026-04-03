@@ -4,6 +4,10 @@
     $accountVerification = auth()->user()?->accountVerification;
     $emailVerified = (bool) ($accountVerification?->email_verified);
     $phoneVerified = (bool) ($accountVerification?->phone_verified);
+    $idVerificationStatus = auth()->user()?->idVerificationRequest?->status;
+    $idVerificationPending = ($idVerificationStatus === 'pending');
+    $idVerificationApproved = ($idVerificationStatus === 'approved');
+    $idVerificationRejected = ($idVerificationStatus === 'rejected');
 @endphp
 
 <div class="min-h-screen flex flex-col">
@@ -48,6 +52,9 @@
                 <x-verification-option-button
                     title="ID Verification"
                     subtitle="Upload a valid ID to confirm identity and increase account trust."
+                    :verified="$idVerificationApproved"
+                    :pending="$idVerificationPending"
+                    :rejected="$idVerificationRejected"
                     href="{{ route('verify.document') }}"
                 >
                     <x-slot:icon>

@@ -38,10 +38,11 @@
 
             <div id="otpStep" class="hidden">
                 <p id="otpSentText" class="text-sm text-zinc-600">We sent a 6-digit OTP to your phone number.</p>
+                <p id="otpTimerText" class="mt-2 text-xs font-medium text-amber-700">OTP expires in 01:00</p>
 
                 <div class="mt-5">
                     <label class="mb-2 block text-sm font-medium text-zinc-700">Enter OTP</label>
-                    <div class="flex items-center gap-2 sm:gap-3">
+                    <div id="otpInputsWrap" class="flex items-center gap-2 sm:gap-3">
                         <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input h-12 w-12 rounded-xl border border-zinc-200 text-center text-lg font-semibold text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200">
                         <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input h-12 w-12 rounded-xl border border-zinc-200 text-center text-lg font-semibold text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200">
                         <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input h-12 w-12 rounded-xl border border-zinc-200 text-center text-lg font-semibold text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200">
@@ -60,31 +61,244 @@
                 </div>
             </div>
 
+            <div id="verifiedState" class="mt-6 hidden rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+                Phone verified.
+            </div>
+
+            <div id="feedbackLog" class="mt-6 hidden rounded-2xl border px-4 py-3 text-sm"></div>
+
             <script>
                 const phoneStep = document.getElementById('phoneStep');
                 const otpStep = document.getElementById('otpStep');
                 const sendOtpButton = document.getElementById('sendOtpButton');
+                const verifyOtpButton = document.getElementById('verifyOtpButton');
+                const resendOtpButton = document.getElementById('resendOtpButton');
                 const phoneInput = document.getElementById('phone');
                 const countryCodeInput = document.getElementById('countryCode');
                 const otpSentText = document.getElementById('otpSentText');
+                const otpTimerText = document.getElementById('otpTimerText');
+                const otpInputsWrap = document.getElementById('otpInputsWrap');
                 const changePhoneButton = document.getElementById('changePhoneButton');
                 const otpInputs = Array.from(document.querySelectorAll('.otp-input'));
+                const feedbackLog = document.getElementById('feedbackLog');
+                const verifiedState = document.getElementById('verifiedState');
 
-                sendOtpButton.addEventListener('click', function () {
-                    const phoneValue = phoneInput.value.trim();
+                let otpTimer = null;
+                let otpSecondsLeft = 0;
 
-                    if (!phoneValue) {
+                function showFeedback(message, type = 'error') {
+                    feedbackLog.classList.remove('hidden', 'border-red-300', 'bg-red-50', 'text-red-800', 'border-emerald-300', 'bg-emerald-50', 'text-emerald-800');
+                    if (type === 'success') {
+                        feedbackLog.classList.add('border-emerald-300', 'bg-emerald-50', 'text-emerald-800');
+                    } else {
+                        feedbackLog.classList.add('border-red-300', 'bg-red-50', 'text-red-800');
+                    }
+                    feedbackLog.textContent = message;
+                }
+
+                function clearFeedback() {
+                    feedbackLog.classList.add('hidden');
+                    feedbackLog.textContent = '';
+                }
+
+                function setButtonLoading(button, isLoading, loadingText, normalText) {
+                    if (isLoading) {
+                        button.disabled = true;
+                        button.dataset.originalText = normalText;
+                        button.textContent = loadingText;
+                        button.classList.add('cursor-not-allowed', 'opacity-70');
+                        return;
+                    }
+
+                    button.disabled = false;
+                    button.textContent = button.dataset.originalText || normalText;
+                    button.classList.remove('cursor-not-allowed', 'opacity-70');
+                }
+
+                function formatTimer(seconds) {
+                    const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+                    const secs = String(seconds % 60).padStart(2, '0');
+                    return `${mins}:${secs}`;
+                }
+
+                function stopOtpTimer() {
+                    if (otpTimer) {
+                        clearInterval(otpTimer);
+                        otpTimer = null;
+                    }
+                }
+
+                function startOtpTimer(seconds) {
+                    stopOtpTimer();
+                    otpSecondsLeft = seconds;
+                    otpTimerText.textContent = `OTP expires in ${formatTimer(otpSecondsLeft)}`;
+
+                    otpTimer = setInterval(function () {
+                        otpSecondsLeft -= 1;
+
+                        if (otpSecondsLeft <= 0) {
+                            stopOtpTimer();
+                            otpTimerText.textContent = 'OTP expired. Request a new OTP.';
+                            showFeedback('OTP expired after 1 minute. Please resend OTP.', 'error');
+                            return;
+                        }
+
+                        otpTimerText.textContent = `OTP expires in ${formatTimer(otpSecondsLeft)}`;
+                    }, 1000);
+                }
+
+                function clearOtpInputs() {
+                    otpInputs.forEach(function (input) {
+                        input.value = '';
+                    });
+                }
+
+                function getOtpValue() {
+                    return otpInputs.map(function (input) {
+                        return input.value;
+                    }).join('');
+                }
+
+                function setOtpErrorState() {
+                    otpInputs.forEach(function (input) {
+                        input.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+                    });
+
+                    otpInputsWrap.classList.remove('animate-otp-shake');
+                    void otpInputsWrap.offsetWidth;
+                    otpInputsWrap.classList.add('animate-otp-shake');
+                }
+
+                function clearOtpErrorState() {
+                    otpInputs.forEach(function (input) {
+                        input.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-100');
+                    });
+                }
+
+                function getFullPhoneNumber() {
+                    const code = countryCodeInput.value.replace(/\s+/g, '');
+                    const local = phoneInput.value.replace(/\s+/g, '');
+                    return `${code}${local}`;
+                }
+
+                async function sendOtp() {
+                    clearFeedback();
+                    clearOtpErrorState();
+                    verifiedState.classList.add('hidden');
+
+                    const localPhone = phoneInput.value.trim();
+                    if (!localPhone) {
+                        showFeedback('Please enter your phone number.', 'error');
                         phoneInput.focus();
                         return;
                     }
 
-                    otpSentText.textContent = `We sent a 6-digit OTP to ${countryCodeInput.value.trim()} ${phoneValue}.`;
-                    phoneStep.classList.add('hidden');
-                    otpStep.classList.remove('hidden');
-                    otpInputs[0].focus();
-                });
+                    const fullPhone = getFullPhoneNumber();
+
+                    setButtonLoading(sendOtpButton, true, 'Sending...', 'Send OTP');
+
+                    try {
+                        const response = await fetch('{{ route('verify.phone.send') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify({ phone: fullPhone }),
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            phoneStep.classList.remove('hidden');
+                            otpStep.classList.add('hidden');
+                            showFeedback(data.message || 'Unable to send OTP. Please try again.', 'error');
+                            return;
+                        }
+
+                        if (data.already_verified) {
+                            phoneStep.classList.add('hidden');
+                            otpStep.classList.add('hidden');
+                            verifiedState.classList.remove('hidden');
+                            showFeedback(data.message || 'Phone already verified.', 'success');
+                            return;
+                        }
+
+                        otpSentText.textContent = `We sent a 6-digit OTP to ${fullPhone}.`;
+                        phoneStep.classList.add('hidden');
+                        otpStep.classList.remove('hidden');
+                        clearOtpInputs();
+                        startOtpTimer(Number(data.expires_in || 60));
+                        otpInputs[0].focus();
+                        showFeedback(data.message || 'OTP sent successfully.', 'success');
+                    } catch (error) {
+                        phoneStep.classList.remove('hidden');
+                        otpStep.classList.add('hidden');
+                        showFeedback('Network error while sending OTP. Please try again.', 'error');
+                    } finally {
+                        setButtonLoading(sendOtpButton, false, 'Sending...', 'Send OTP');
+                    }
+                }
+
+                async function verifyOtp() {
+                    clearFeedback();
+                    clearOtpErrorState();
+
+                    const otp = getOtpValue();
+                    if (otp.length !== 6) {
+                        setOtpErrorState();
+                        showFeedback('Please enter the 6-digit OTP code.', 'error');
+                        otpInputs[0].focus();
+                        return;
+                    }
+
+                    setButtonLoading(verifyOtpButton, true, 'Verifying...', 'Verify Phone');
+                    resendOtpButton.disabled = true;
+                    resendOtpButton.classList.add('cursor-not-allowed', 'opacity-70');
+
+                    try {
+                        const response = await fetch('{{ route('verify.phone.confirm') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify({ otp }),
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            setOtpErrorState();
+                            showFeedback(data.message || 'OTP verification failed.', 'error');
+                            return;
+                        }
+
+                        stopOtpTimer();
+                        otpStep.classList.add('hidden');
+                        phoneStep.classList.add('hidden');
+                        verifiedState.classList.remove('hidden');
+                        showFeedback(data.message || 'Phone verified successfully.', 'success');
+                    } catch (error) {
+                        setOtpErrorState();
+                        showFeedback('Network error while verifying OTP. Please try again.', 'error');
+                    } finally {
+                        setButtonLoading(verifyOtpButton, false, 'Verifying...', 'Verify Phone');
+                        resendOtpButton.disabled = false;
+                        resendOtpButton.classList.remove('cursor-not-allowed', 'opacity-70');
+                    }
+                }
+
+                sendOtpButton.addEventListener('click', sendOtp);
+                resendOtpButton.addEventListener('click', sendOtp);
+                verifyOtpButton.addEventListener('click', verifyOtp);
 
                 changePhoneButton.addEventListener('click', function () {
+                    stopOtpTimer();
+                    clearFeedback();
+                    clearOtpErrorState();
                     otpStep.classList.add('hidden');
                     phoneStep.classList.remove('hidden');
                     phoneInput.focus();
@@ -92,6 +306,7 @@
 
                 otpInputs.forEach(function (input, index) {
                     input.addEventListener('input', function (event) {
+                        clearOtpErrorState();
                         const value = event.target.value.replace(/\D/g, '');
                         event.target.value = value;
 
@@ -119,6 +334,21 @@
                     });
                 });
             </script>
+
+            <style>
+                @keyframes otp-shake {
+                    0% { transform: translateX(0); }
+                    20% { transform: translateX(-5px); }
+                    40% { transform: translateX(5px); }
+                    60% { transform: translateX(-4px); }
+                    80% { transform: translateX(4px); }
+                    100% { transform: translateX(0); }
+                }
+
+                .animate-otp-shake {
+                    animation: otp-shake 0.35s ease-in-out;
+                }
+            </style>
         </div>
     </div>
 </div>

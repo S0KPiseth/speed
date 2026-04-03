@@ -1,11 +1,14 @@
 <?php
 use App\Http\Controllers\addController;
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\buyController;
 use App\Http\Controllers\EmailVerificationController;
+use App\Http\Controllers\DocumentVerificationController;
 use App\Http\Controllers\editController;
 use App\Http\Controllers\getCarDetails;
 use App\Http\Controllers\getMakes;
 use App\Http\Controllers\loginController;
+use App\Http\Controllers\PhoneVerificationController;
 use App\Http\Controllers\sellController;
 use App\Http\Controllers\UserController;
 
@@ -75,7 +78,18 @@ Route::get('verify/email/confirm', [EmailVerificationController::class, 'confirm
 Route::get('verify/phone', function () {
     return view('pages.verify.phone', ['user' => Auth::user()]);
 })->name('verify.phone')->middleware('auth');
+Route::post('verify/phone/send', [PhoneVerificationController::class, 'send'])->name('verify.phone.send')->middleware('auth');
+Route::post('verify/phone/confirm', [PhoneVerificationController::class, 'confirm'])->name('verify.phone.confirm')->middleware('auth');
 
-Route::get('verify/document', function () {
-    return view('pages.verify.document', ['user' => Auth::user()]);
-})->name('verify.document')->middleware('auth');
+Route::get('verify/document', [DocumentVerificationController::class, 'show'])->name('verify.document')->middleware('auth');
+Route::post('verify/document', [DocumentVerificationController::class, 'submit'])->name('verify.document.submit')->middleware('auth');
+
+Route::prefix('admin')
+    ->name('admin.')
+    ->controller(AdminDashboardController::class)
+    ->middleware(['auth', 'admin'])
+    ->group(function () {
+        Route::get('/dashboard', 'index')->name('dashboard');
+        Route::post('/id-requests/{requestId}/approve', 'approve')->name('id.approve');
+        Route::post('/id-requests/{requestId}/reject', 'reject')->name('id.reject');
+    });

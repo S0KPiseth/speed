@@ -101,4 +101,44 @@ class ImageKit
             throw new Exception('Image deletion request failed: ' . $e->getMessage());
         }
     }
+
+    public function uploadFile($file, ?string $fileNamePrefix = null): array
+    {
+        $safePrefix = $fileNamePrefix ? trim($fileNamePrefix) . '_' : '';
+        $response = $this->client->request('POST', $this->url . 'upload', [
+            'multipart' => [
+                [
+                    'name' => 'file',
+                    'filename' => $file->getClientOriginalName(),
+                    'contents' => $file->get(),
+                    'headers' => [
+                        'Content-Type' => $file->getClientMimeType(),
+                    ],
+                ],
+                [
+                    'name' => 'fileName',
+                    'contents' => $safePrefix . time() . '_' . $file->getClientOriginalName(),
+                ],
+            ],
+            'headers' => [
+                'Accept' => 'application/json',
+                'Authorization' => 'Basic ' . $this->key,
+            ],
+        ]);
+
+        if ($response->getStatusCode() !== 200) {
+            throw new Exception('Image upload failed.');
+        }
+
+        $body = json_decode($response->getBody(), true);
+
+        if (! is_array($body) || ! isset($body['url'], $body['fileId'])) {
+            throw new Exception('Image upload response is invalid.');
+        }
+
+        return [
+            'url' => $body['url'],
+            'fileId' => $body['fileId'],
+        ];
+    }
 }

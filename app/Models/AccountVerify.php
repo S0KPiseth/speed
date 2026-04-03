@@ -19,6 +19,6 @@ class AccountVerify extends Model
     }
     public function idVerificationRequest():HasOne
     {
-        return $this->hasOne(IdVerificationRequest::class);
+        return $this->hasOne(IDVerificationRequest::class);
     }
 }

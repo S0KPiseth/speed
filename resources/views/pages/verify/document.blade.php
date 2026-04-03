@@ -1,7 +1,23 @@
 @extends('home.index')
 @section('layoutContent')
+@php
+    $currentStatus = ($idVerificationStatus ?? null);
+    $isPending = ($currentStatus === 'pending');
+    $isApproved = ($currentStatus === 'approved');
+    $isRejected = ($currentStatus === 'rejected');
+    $showPendingSuccess = Session::has('success') || $isPending;
+    $errorMessage = $errors->first();
+@endphp
 <div class="min-h-screen bg-zinc-50">
     <x-nav-bar class="opacity-0"></x-nav-bar>
+
+    @if ($errorMessage)
+        <div class="fixed top-15 right-4 z-[9999] flex flex-col gap-y-1.5 pointer-events-none">
+            <div class="pointer-events-auto">
+                <x-feedback-log :error="$errorMessage"></x-feedback-log>
+            </div>
+        </div>
+    @endif
 
     <div class="mx-auto flex w-full max-w-3xl items-center justify-center px-4 py-12">
         <div class="w-full rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
@@ -14,35 +30,182 @@
                 </a>
             </div>
 
-            <div class="mb-8">
-                <p class="text-xs uppercase tracking-[0.2em] text-zinc-500">Account verification</p>
-                <h1 class="mt-2 text-3xl font-semibold text-zinc-900">ID Document Verification</h1>
-                <p class="mt-3 text-sm text-zinc-600">Upload a valid identity document to verify account ownership and improve buyer trust.</p>
-            </div>
-
-            <form action="" method="POST" enctype="multipart/form-data" class="space-y-5">
-                @csrf
-                <div>
-                    <label for="document_type" class="mb-2 block text-sm font-medium text-zinc-700">Document Type</label>
-                    <select id="document_type" name="document_type" class="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-400">
-                        <option value="">Select document type</option>
-                        <option value="national_id">National ID</option>
-                        <option value="passport">Passport</option>
-                        <option value="driver_license">Driver License</option>
-                    </select>
+            @if ($isApproved)
+                <div class="text-center">
+                    <p class="text-xs uppercase tracking-[0.2em] text-emerald-600">Verified</p>
+                    <h2 class="mt-2 text-3xl font-semibold text-zinc-900">You Are Already Verified</h2>
+                    <p class="mt-3 text-sm text-zinc-600">Your ID verification has been approved by our team.</p>
+                    <div class="mt-7">
+                        <a href="{{ route('verify') }}" class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-zinc-700">
+                            Return to Verification Page
+                        </a>
+                    </div>
+                </div>
+            @elseif ($showPendingSuccess)
+                <div class="text-center">
+                    <p class="text-xs uppercase tracking-[0.2em] text-emerald-600">Success</p>
+                    <h2 class="mt-2 text-3xl font-semibold text-zinc-900">Document Uploaded</h2>
+                    <p class="mt-3 text-sm text-zinc-600">Your document is successfully uploaded and waiting for our team to verify.</p>
+                    <div class="mt-7">
+                        <a href="{{ route('verify') }}" class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-zinc-700">
+                            Return to Verification Page
+                        </a>
+                    </div>
+                </div>
+            @elseif ($isRejected)
+                <div class="rounded-2xl border border-rose-200 bg-rose-50 p-5">
+                    <p class="text-xs uppercase tracking-[0.2em] text-rose-600">Rejected</p>
+                    <h2 class="mt-2 text-2xl font-semibold text-zinc-900">Your Verification Was Rejected</h2>
+                    <p class="mt-3 text-sm text-zinc-700">Reason: {{ $idVerificationReason ?? 'No reason provided.' }}</p>
                 </div>
 
-                <div>
-                    <label for="document_file" class="mb-2 block text-sm font-medium text-zinc-700">Upload Document</label>
-                    <input id="document_file" name="document_file" type="file" accept="image/*,.pdf" class="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-700 outline-none transition file:mr-4 file:rounded-lg file:border-0 file:bg-zinc-900 file:px-3 file:py-2 file:text-sm file:text-white hover:file:bg-zinc-700">
-                    <p class="mt-2 text-xs text-zinc-500">Accepted format: JPG, PNG, PDF. Max size: 10MB.</p>
+
+                <div id="upload-again" class="mt-8">
+                    <div class="mb-8">
+                        <p class="text-xs uppercase tracking-[0.2em] text-zinc-500">Account verification</p>
+                        <h1 class="mt-2 text-3xl font-semibold text-zinc-900">Re-Upload ID Document</h1>
+                        <p class="mt-3 text-sm text-zinc-600">Please upload clear front and back images of your ID and correct the issues mentioned in the rejection reason.</p>
+                    </div>
+
+                    <form id="documentVerificationForm" action="{{ route('verify.document.submit') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+                        @csrf
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div>
+                                <label for="id_front" class="mb-2 block text-sm font-medium text-zinc-700">ID Front Side</label>
+                                <label for="id_front" data-upload-box="id_front" class="group relative flex h-44 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-zinc-300 bg-zinc-50 px-4 text-center transition hover:border-zinc-500 hover:bg-zinc-100">
+                                    <img data-upload-preview="id_front" alt="Front ID preview" class="absolute inset-0 hidden h-full w-full object-cover">
+                                    <div data-upload-empty="id_front" class="relative z-10">
+                                        <span class="text-sm font-medium text-zinc-700">Upload front image</span>
+                                        <span class="mt-1 block text-xs text-zinc-500">JPG, PNG (max 10MB)</span>
+                                    </div>
+                                    <button data-upload-remove="id_front" type="button" class="absolute right-2 top-2 z-20 hidden h-8 w-8 items-center justify-center rounded-full bg-white/95 text-lg font-semibold text-zinc-700 shadow transition hover:bg-white">&times;</button>
+                                    <input id="id_front" name="id_front" type="file" accept="image/jpeg,image/png" class="hidden">
+                                </label>
+                            </div>
+
+                            <div>
+                                <label for="id_back" class="mb-2 block text-sm font-medium text-zinc-700">ID Back Side</label>
+                                <label for="id_back" data-upload-box="id_back" class="group relative flex h-44 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-zinc-300 bg-zinc-50 px-4 text-center transition hover:border-zinc-500 hover:bg-zinc-100">
+                                    <img data-upload-preview="id_back" alt="Back ID preview" class="absolute inset-0 hidden h-full w-full object-cover">
+                                    <div data-upload-empty="id_back" class="relative z-10">
+                                        <span class="text-sm font-medium text-zinc-700">Upload back image</span>
+                                        <span class="mt-1 block text-xs text-zinc-500">JPG, PNG (max 10MB)</span>
+                                    </div>
+                                    <button data-upload-remove="id_back" type="button" class="absolute right-2 top-2 z-20 hidden h-8 w-8 items-center justify-center rounded-full bg-white/95 text-lg font-semibold text-zinc-700 shadow transition hover:bg-white">&times;</button>
+                                    <input id="id_back" name="id_back" type="file" accept="image/jpeg,image/png" class="hidden">
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 text-right">
+                            <button id="documentSubmitButton" type="submit" class="rounded-xl bg-zinc-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-zinc-700">Submit ID Verification</button>
+                        </div>
+                    </form>
+                </div>
+            @else
+                <div class="mb-8">
+                    <p class="text-xs uppercase tracking-[0.2em] text-zinc-500">Account verification</p>
+                    <h1 class="mt-2 text-3xl font-semibold text-zinc-900">ID Document Verification</h1>
+                    <p class="mt-3 text-sm text-zinc-600">Upload the front and back sides of your national ID to verify account ownership and improve buyer trust.</p>
                 </div>
 
-                <div class="pt-2 text-right">
-                    <button type="submit" class="rounded-xl bg-zinc-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-zinc-700">Submit Document</button>
-                </div>
-            </form>
+                <form id="documentVerificationForm" action="{{ route('verify.document.submit') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+                    @csrf
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div>
+                            <label for="id_front" class="mb-2 block text-sm font-medium text-zinc-700">ID Front Side</label>
+                            <label for="id_front" data-upload-box="id_front" class="group relative flex h-44 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-zinc-300 bg-zinc-50 px-4 text-center transition hover:border-zinc-500 hover:bg-zinc-100">
+                                <img data-upload-preview="id_front" alt="Front ID preview" class="absolute inset-0 hidden h-full w-full object-cover">
+                                <div data-upload-empty="id_front" class="relative z-10">
+                                    <span class="text-sm font-medium text-zinc-700">Upload front image</span>
+                                    <span class="mt-1 block text-xs text-zinc-500">JPG, PNG (max 10MB)</span>
+                                </div>
+                                <button data-upload-remove="id_front" type="button" class="absolute right-2 top-2 z-20 hidden h-8 w-8 items-center justify-center rounded-full bg-white/95 text-lg font-semibold text-zinc-700 shadow transition hover:bg-white">&times;</button>
+                                <input id="id_front" name="id_front" type="file" accept="image/jpeg,image/png" class="hidden">
+                            </label>
+                        </div>
+
+                        <div>
+                            <label for="id_back" class="mb-2 block text-sm font-medium text-zinc-700">ID Back Side</label>
+                            <label for="id_back" data-upload-box="id_back" class="group relative flex h-44 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-zinc-300 bg-zinc-50 px-4 text-center transition hover:border-zinc-500 hover:bg-zinc-100">
+                                <img data-upload-preview="id_back" alt="Back ID preview" class="absolute inset-0 hidden h-full w-full object-cover">
+                                <div data-upload-empty="id_back" class="relative z-10">
+                                    <span class="text-sm font-medium text-zinc-700">Upload back image</span>
+                                    <span class="mt-1 block text-xs text-zinc-500">JPG, PNG (max 10MB)</span>
+                                </div>
+                                <button data-upload-remove="id_back" type="button" class="absolute right-2 top-2 z-20 hidden h-8 w-8 items-center justify-center rounded-full bg-white/95 text-lg font-semibold text-zinc-700 shadow transition hover:bg-white">&times;</button>
+                                <input id="id_back" name="id_back" type="file" accept="image/jpeg,image/png" class="hidden">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 text-right">
+                        <button id="documentSubmitButton" type="submit" class="rounded-xl bg-zinc-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-zinc-700">Submit ID Verification</button>
+                    </div>
+                </form>
+            @endif
         </div>
     </div>
 </div>
+
+@if (! $isApproved && ! $showPendingSuccess)
+    <script>
+        (() => {
+            const configureUploadPreview = (fieldName) => {
+                const input = document.getElementById(fieldName);
+                const preview = document.querySelector(`[data-upload-preview="${fieldName}"]`);
+                const emptyState = document.querySelector(`[data-upload-empty="${fieldName}"]`);
+                const removeButton = document.querySelector(`[data-upload-remove="${fieldName}"]`);
+
+                if (!input || !preview || !emptyState || !removeButton) {
+                    return;
+                }
+
+                const clearPreview = () => {
+                    input.value = '';
+                    preview.src = '';
+                    preview.classList.add('hidden');
+                    emptyState.classList.remove('hidden');
+                    removeButton.classList.add('hidden');
+                };
+
+                input.addEventListener('change', (event) => {
+                    const file = event.target.files && event.target.files[0] ? event.target.files[0] : null;
+
+                    if (!file) {
+                        clearPreview();
+                        return;
+                    }
+
+                    const objectUrl = URL.createObjectURL(file);
+                    preview.src = objectUrl;
+                    preview.onload = () => URL.revokeObjectURL(objectUrl);
+                    preview.classList.remove('hidden');
+                    emptyState.classList.add('hidden');
+                    removeButton.classList.remove('hidden');
+                });
+
+                removeButton.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    clearPreview();
+                });
+            };
+
+            const form = document.getElementById('documentVerificationForm');
+            const submitButton = document.getElementById('documentSubmitButton');
+
+            if (form && submitButton) {
+                form.addEventListener('submit', () => {
+                    submitButton.disabled = true;
+                    submitButton.classList.add('cursor-not-allowed', 'opacity-70');
+                    submitButton.textContent = 'Uploading...';
+                });
+            }
+
+            configureUploadPreview('id_front');
+            configureUploadPreview('id_back');
+        })();
+    </script>
+@endif
 @endsection

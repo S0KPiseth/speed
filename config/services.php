@@ -45,6 +45,7 @@ return [
     'brevo' => [
         'key' => env('BREVO_API_KEY'),
         'url' => env('BREVO_API_URL', 'https://api.brevo.com/v3'),
+        'sms_sender' => env('BREVO_SMS_SENDER', env('APP_NAME', 'Prime Motor')),
         'sender' => [
             'name' => env('BREVO_SENDER_NAME', env('APP_NAME', 'Prime Motor')),
             'email' => env('BREVO_SENDER_EMAIL'),

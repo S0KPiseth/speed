@@ -48,7 +48,7 @@
                 <a href="" class="text-xs underline">Seller details</a>
             </div>
             <br>
-           @if ($user->cars->find($car->id))
+           @if ($user && $user->cars->find($car->id))
             <div class="w-full flex flex-col gap-y-2">
                 <a href="" class="w-full border-1 p-2 rounded-full px-4 flex items-center justify-between">Edit
                     <svg width="24px" height="24px">

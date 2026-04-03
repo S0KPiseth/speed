@@ -24,6 +24,7 @@ class User extends Authenticatable
         'username',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -64,5 +65,10 @@ class User extends Authenticatable
     public function verificationRequests(): HasMany
     {
         return $this->hasMany(VerificationRequest::class);
+    }
+
+    public function idVerificationRequest(): HasOne
+    {
+        return $this->hasOne(IDVerificationRequest::class);
     }
 }
